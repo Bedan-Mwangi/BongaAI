@@ -1,4 +1,4 @@
-// BongaAI WhatsApp Bridge - Render Ready
+// BongaAI WhatsApp Bridge - Render Ready - NO META
 const { default: makeWASocket, useMultiFileAuthState } = require('@whiskeysockets/baileys')
 const axios = require('axios')
 const qrcode = require('qrcode-terminal')
@@ -19,15 +19,15 @@ async function startBongaAI() {
             console.log("\n\n==== BONGA AI QR CODE - SCAN ME ====")
             qrcode.generate(qr, { small: true })
             console.log("WhatsApp > Linked Devices > Link a Device")
-            console.log("If on Render, check Logs - you have 30 seconds to scan!")
+            console.log("Render Logs: You have 30 seconds to scan!")
             console.log("=====================================\n")
         }
 
         if(connection === 'close') {
-            console.log('Connection closed, reconnecting...')
+            console.log('Connection closed, reconnecting in 3s...')
             setTimeout(startBongaAI, 3000)
         } else if(connection === 'open') {
-            console.log('✅ BongaAI is online! Bot Assistant: BongaAI is LIVE on Render!')
+            console.log('✅ BongaAI is LIVE! Bot Assistant: BongaAI')
         }
     })
 
