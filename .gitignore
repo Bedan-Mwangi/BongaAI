@@ -1,0 +1,28 @@
+﻿# Secrets - NEVER push
+.env
+.env.local
+*.key
+*.pem
+
+# WhatsApp Auth - CRITICAL
+baileys_auth/
+wa_session/
+auth_info/
+
+# Python
+__pycache__/
+.venv/
+venv/
+*.db
+bonga.db
+
+# Node
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# Logs & OS
+*.log
+.DS_Store
+.idea/
+.vscode/

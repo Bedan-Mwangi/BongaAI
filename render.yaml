@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: bongaai
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: LLM_PROVIDER
+        value: groq
+      - key: BRAIN_URL
+        value: http://localhost:10000
+    disk:
+      name: bonga-auth
+      mountPath: /app/baileys_auth
+      sizeGB: 1

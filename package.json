@@ -1,0 +1,15 @@
+{
+  "name": "bongaai-bot-assistant",
+  "version": "1.0.0",
+  "description": "Bot Assistant: BongaAI - WhatsApp AI Bot - No Meta",
+  "main": "whatsapp_bridge.js",
+  "scripts": {
+    "start": "node whatsapp_bridge.js",
+    "dev": "node whatsapp_bridge.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.8",
+    "axios": "^1.6.7",
+    "qrcode-terminal": "^0.12.0"
+  }
+}
