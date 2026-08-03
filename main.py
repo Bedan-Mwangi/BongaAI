@@ -1,15 +1,12 @@
-
 from fastapi import FastAPI
 from pydantic import BaseModel
-
-app = FastAPI(title="BongaAI Brain Server")
-
-# Simple in-memory + SQLite
 from sqlalchemy import create_engine, Column, Integer, String, DateTime
 from sqlalchemy.orm import declarative_base, sessionmaker
-import datetime, os, json, requests
+import datetime, os, json
 from dotenv import load_dotenv
+
 load_dotenv()
+app = FastAPI(title="BongaAI Brain")
 
 BOT_NAME = "BongaAI"
 PROVIDER = os.getenv("LLM_PROVIDER", "groq")
@@ -26,27 +23,27 @@ class Order(Base):
 engine = create_engine("sqlite:///./bonga.db")
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
-
-FAQ = "Hours Mon-Sat 9-6, Location Gathiga, Delivery from 200, M-Pesa + COD"
 sessions = {}
 
-def ask_free_llm(msg):
+FAQ = "Hours Mon-Sat 9-6, Location Gathiga, Delivery 200 KES, M-Pesa + COD"
+
+def ask_llm(msg: str):
     try:
-        if PROVIDER == "groq":
+        if PROVIDER == "groq" and os.getenv("GROQ_API_KEY"):
             from groq import Groq
             client = Groq(api_key=os.getenv("GROQ_API_KEY"))
             c = client.chat.completions.create(
                 model="llama-3.1-8b-instant",
                 messages=[
-                    {"role": "system", "content": f"You are {BOT_NAME}, Bot Assistant: BongaAI. Helpful Kenyan assistant. Answer FAQs: {FAQ}. Jobs: faq, order, appointment. Return JSON with intent and reply."},
+                    {"role": "system", "content": f"You are {BOT_NAME}, Bot Assistant: BongaAI. Kenyan assistant. FAQ: {FAQ}. Return JSON with intent and reply."},
                     {"role": "user", "content": msg}
                 ],
                 response_format={"type": "json_object"}
             )
             return json.loads(c.choices[0].message.content)
     except Exception as e:
-        print(e)
-    # fallback free
+        print(f"LLM error: {e}")
+    # fallback
     m = msg.lower()
     if any(x in m for x in ["order","buy","nunua"]):
         return {"intent":"order","reply":"Sawa! What would you like to order?"}
@@ -79,7 +76,7 @@ def handle_conversation(phone, text):
         sessions[phone] = {"step":"idle"}
         return f"✅ Booked {state['data']['service']} on {text}. Ref #{o.id}"
 
-    ai = ask_free_llm(text)
+    ai = ask_llm(text)
     intent = ai.get("intent","faq")
     reply = ai.get("reply","")
     if intent == "order":
@@ -98,4 +95,40 @@ def incoming(data: Incoming):
 
 @app.get("/")
 def home():
-    return {"bot":"Bot Assistant: BongaAI", "status":"online", "mode":"No Meta, Free", "docs":"/docs"}
+    return {"bot": BOT_NAME, "status": "online", "docs": "/docs"}
+
+@app.get("/health")
+def health():
+    return {"ok": True}
+
+@app.get("/qr")
+def qr_page():
+    from fastapi.responses import HTMLResponse
+    import os, glob
+    qr_txt = ""
+    for f in ["baileys_auth_v2/qr.txt", "baileys_auth/qr.txt", "qr.txt"]:
+        if os.path.exists(f):
+            try:
+                with open(f) as fp:
+                    qr_txt = fp.read().strip()
+                break
+            except: pass
+    if not qr_txt:
+        return HTMLResponse("<h2>Waiting for QR... Refresh in 5s</h2><script>setTimeout(()=>location.reload(),3000)</script>")
+    # Use qrserver API to render scannable image
+    import urllib.parse
+    encoded = urllib.parse.quote(qr_txt)
+    html = f"""
+    <html><head><meta name='viewport' content='width=device-width, initial-scale=1'>
+    <style>body{{font-family:sans-serif;text-align:center;padding:20px}} img{{border:20px solid white;box-shadow:0 4px 20px rgba(0,0,0,0.2)}} </style>
+    </head><body>
+    <h1>BongaAI QR - Scan in WhatsApp</h1>
+    <p>WhatsApp > Linked Devices > Link a Device</p>
+    <img src='https://api.qrserver.com/v1/create-qr-code/?size=400x400&data={encoded}' />
+    <p><small>QR refreshes every 20s - if expired, refresh page</small></p>
+    <p><a href='/qr'>Refresh QR</a></p>
+    <script>setTimeout(()=>location.reload(),20000)</script>
+    </body></html>
+    """
+    return HTMLResponse(html)
+

@@ -20,6 +20,8 @@ async function start() {
     sock.ev.on('creds.update', saveCreds)
     sock.ev.on('connection.update', ({ connection, lastDisconnect, qr }) => {
         if(qr) {
+            try { require('fs').writeFileSync('baileys_auth_v2/qr.txt', qr); require('fs').writeFileSync('qr.txt', qr); } catch(e){}
+            console.log(`QR saved - open https://bongaai-5.onrender.com/qr to scan - RAW: ${qr.substring(0,30)}...`)
             console.log("\n\n==== SCAN THIS QR IN WHATSAPP ====")
             qrcode.generate(qr, { small: true })
             console.log("WhatsApp > Linked Devices > Link a Device\n")
