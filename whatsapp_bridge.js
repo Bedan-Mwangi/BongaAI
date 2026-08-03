@@ -1,6 +1,6 @@
-// BongaAI WhatsApp Bridge - FIXED for Render (crypto bug)
+// BongaAI WhatsApp Bridge - FIXED crypto + fresh auth v2
 const crypto = require('crypto')
-global.crypto = crypto  // FIX: Baileys needs this
+global.crypto = crypto
 
 const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys')
 const axios = require('axios')
@@ -10,7 +10,8 @@ const BRAIN_URL = process.env.BRAIN_URL || 'http://localhost:10000'
 console.log(`[BongaAI] Brain URL: ${BRAIN_URL}`)
 
 async function start() {
-    const { state, saveCreds } = await useMultiFileAuthState('baileys_auth')
+    // Changed folder to baileys_auth_v2 to force fresh QR (since free Render has no Shell)
+    const { state, saveCreds } = await useMultiFileAuthState('baileys_auth_v2')
     const sock = makeWASocket({ 
         auth: state,
         printQRInTerminal: false,
@@ -25,7 +26,7 @@ async function start() {
         }
         if(connection === 'close') {
             const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut
-            console.log('Connection closed, reconnecting in 3s...', shouldReconnect ? '' : 'LOGGED OUT')
+            console.log('Connection closed, reconnecting...', lastDisconnect?.error?.message?.slice(0,100))
             if(shouldReconnect) setTimeout(start, 3000)
         }
         if(connection === 'open') console.log('✅ BongaAI is LIVE!')
